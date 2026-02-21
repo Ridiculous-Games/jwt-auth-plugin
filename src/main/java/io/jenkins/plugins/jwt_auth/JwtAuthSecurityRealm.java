@@ -165,6 +165,14 @@ public class JwtAuthSecurityRealm extends SecurityRealm {
 			public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
 					FilterChain filterChain) throws IOException, ServletException {
 
+				// If already authenticated (e.g. via API token / Basic auth), don't overwrite
+				Authentication existing = SecurityContextHolder.getContext().getAuthentication();
+				if (existing != null && existing.isAuthenticated()
+						&& !Jenkins.ANONYMOUS2.equals(existing)) {
+					filterChain.doFilter(servletRequest, servletResponse);
+					return;
+				}
+
 				SecurityContextHolder.getContext().setAuthentication(
 						getAuthFromToken(servletRequest)
 				);
